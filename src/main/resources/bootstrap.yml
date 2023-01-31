@@ -1,0 +1,33 @@
+# Tomcat
+server:
+  port: 9994
+
+# Spring
+spring:
+  application:
+    # 应用名称
+    name: yty-site-cloud
+  profiles:
+    # 环境配置
+    active: test
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    nacos:
+      discovery:
+        # 服务注册地址
+        server-addr: 10.252.252.151:9980
+        group: ${spring.profiles.active}
+        namespace: yty-cloud
+      config:
+        # 配置中心地址
+        server-addr: 10.252.252.151:9980
+        # 配置文件格式
+        file-extension: yml
+        group: ${spring.profiles.active}
+        namespace: yty-cloud
+        # 共享配置
+        shared-configs:
+          - dataId: common-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+            group: ${spring.profiles.active}
+            refresh: true

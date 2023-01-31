@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>51WORLD SuperAPI demo</title>
+
+    <link rel="stylesheet" href="http://superapi.51hitech.com/doc-static/css/global.css">
+    <script src="http://superapi.51hitech.com/dist/superAPI.min.js"></script>
+    <style>
+        .btn {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            color: #fff;
+            background: #0a8;
+            border: none;
+            padding: 8px 10px;
+            line-height: 1;
+            outline: none;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+        }
+
+        .btn:hover {
+            background: #0c8;
+        }
+
+        .btn2 {
+            top: 60px;
+        }
+
+        .btn3 {
+            top: 100px;
+        }
+
+        .btn.show,
+        .btn2.show,
+        .btn3.show {
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="player" style="display:none;"></div>
+    <div class="begin">
+        <button type="button" class="cloud-btn">Start Now</button>
+    </div>
+
+    <div class="btn" onclick="StopRenderCloud()">StopRenderCloud</div>
+    <div class="btn btn2" onclick="addPOI()">AddPOI</div>
+    <div class="btn btn3" onclick="SetCameraInfo()">SetCameraInfo</div>
+
+    <script>
+        "use strict";
+        //新标准方式 (51cloud 5.3.0 及以上版本):
+        let cloudurl = "http://10.252.249.66:8889",    //云渲染服务地址, 8889:固定端口
+            orderID = "C28Ffcf9";  //渲染口令, 在云渲染客户端上获得
+        function GetUrlStartRenderCloud() {
+                fetch(`${cloudurl}/Renderers/Any/order`, {
+                    //方式 ①
+                    method: "POST",
+                    headers: { "Content-type": "application/x-www-form-urlencoded" },
+                    body: `order=${orderID}&width=${window.innerWidth}&height=${window.innerHeight}`
+                    //order 渲染口令必填; 初始化云渲染固定分辨率输出, 可选; 默认以云渲染客户端设置的分辨率输出
+
+                    //方式 ②
+                    //method: "POST",
+                    //headers: { "Content-type": "application/json" },
+                    //body: JSON.stringify({order:order, width:window.innerWidth, height:window.innerHeight})
+                }).then(res => {
+                    if (!res.ok) { throw Error(res.statusText) }
+                    return res.json()
+                }).then(json => {
+                    if (json.url) {
+
+                        //启动云渲染
+                        cloudRender.SuperAPI("StartRenderCloud", json.url);
+
+                        //事件注册
+                        cloudRender.SuperAPI("RegisterCloudResponse", myHandleResponseFunction);
+                    }
+                }).catch((error) => {
+                    console.error('Error: ', error);
+                });
+            }
+
+        // 传统方式 (51cloud 5.3.0 以下版本):
+        // let cloudurl = "http://172.31.9.235:8889", //云渲染服务地址 (Cloud rendering service address) ①本地IP: http://172.31.9.21:8889, ②域名: https://vizservice.51hitech.com
+        //     ProjectID = "600a86b4de71483e50f583fa", //项目ID, 在云渲染客户端上获得 (Project ID, obtained on the cloud rendering client)
+        //     UserName = "guest", //用户名, 在云渲染客户端上获得 (User name , obtained on the cloud rendering client)
+        //     Password = "123456"; //密码, 在云渲染客户端上获得 (Password , obtained on the cloud rendering client)
+
+        // function GetUrlStartRenderCloud() {
+        //     fetch(`${cloudurl}/autoLogin`, {
+        //         method: "POST",
+        //         body: `username=${UserName}&pwd=${Password}`,
+        //         headers: { "Content-type": "application/x-www-form-urlencoded" }
+        //     }).then(res => res.json()).then(json => {
+        //         if (json.error) {
+        //             console.log('error: ' + json.error)
+        //         } else if (json.token) {
+        //             fetch(`${cloudurl}/Renderers/Any/${ProjectID}`, {
+        //                 method: "POST",
+        //                 headers: {
+        //                     "Content-type": "application/x-www-form-urlencoded",
+        //                     "Authorization": `Bearer ${json.token}`
+        //                 },
+        //                 //初始化云渲染固定分辨率输出, 可选, 默认以云渲染客户端设置的分辨率输出
+        //                 // Initialize cloud rendering output at fixed resolution, optional, default output is at the resolution set by the cloud rendering client
+        //                 body: `width=${window.innerWidth}&height=${window.innerHeight}`
+        //             }).then(res => res.json()).then(json => {
+        //                 if (json.error) {
+        //                     console.log('error: ' + json.error)
+        //                 } else if (json.url) {
+
+        //                     //启动云渲染 (Start cloud rendering)
+        //                     cloudRender.SuperAPI("StartRenderCloud", json.url);
+
+        //                     //事件注册 (Callbakc event registration)
+        //                     cloudRender.SuperAPI("RegisterCloudResponse", myHandleResponseFunction);
+        //                 }
+        //             }).catch((error) => {
+        //                 console.error('Error:', error);
+        //             });
+        //         }
+        //     }).catch((error) => {
+        //         console.error('Error:', error);
+        //     });
+        // }
+
+        const cloudBtn = document.querySelector('.cloud-btn');
+        var cloudRender = new cloudRenderer('player', 0);
+
+        cloudBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            cloudBtn.setAttribute('disabled', 'disabled');
+            cloudBtn.textContent = 'Loading ...';
+
+            GetUrlStartRenderCloud();
+        }, true)
+
+        // 事件注册函数 (Event handler function)
+        function myHandleResponseFunction(data) {
+            let jsonObject = JSON.parse(data);
+            switch (jsonObject.func_name) {
+                case 'beginPlay':
+                    document.querySelector('.begin').style = 'display:none;';
+                    break;
+
+                case 'APIAlready':
+                    console.log('APIAlready: 3D世界加载完成');
+                    //云渲染场景加载完成 业务逻辑...
+                    //Do something when 3D world loading is complete
+
+                    document.querySelector('.btn').classList.add('show');
+                    document.querySelector('.btn2').classList.add('show');
+                    document.querySelector('.btn3').classList.add('show');
+                    break;
+
+                case 'OnPOIClick':
+                    console.log('OnPOIClick_id = ' + jsonObject.args.id);
+                    // 返回一个点击POI的ID值
+                    // Do something when return the ID of a clicked POI
+                    break;
+            }
+            return data;
+        }
+
+
+        // 添加自定义POI点
+        // Add a custom POI
+        function addPOI() {
+            let jsondata = {
+                "id": "poi_id",
+                "label": "Hello 51WORLD！",
+                "coord_type": 0,
+                "cad_mapkey": "",
+                "coord": "113.318245,23.107733",
+                "coord_z": 15,
+                "coord_z_type": 0,
+                "always_show_label": true,
+                "show_label_range": "0,2000",
+                "umg_type": "default",
+                "sort_order": true
+            }
+
+            cloudRender.SuperAPI("AddPOI", jsondata, (status) => {
+                console.log(status); //成功、失败回调
+            })
+        }
+
+        // 获取场景镜头信息
+        // Get the current camera infomation
+        function SetCameraInfo() {
+            let jsonData = {
+                "coord_type":0,                                 //坐标类型(0:经纬度坐标, 1:cad坐标)
+                "cad_mapkey":"",                                //CAD基准点Key值, 项目中约定
+                "center_coord":"113.318245,23.107733",           //中心点的坐标 lng,lat
+                "arm_distance":1000,                            //镜头距中心点距离(单位:米)
+                "pitch":30,                                     //镜头俯仰角(5~89)
+                "yaw":0,                                        //镜头偏航角(0正北, 0~359)
+                "fly":false                                     //true: 飞行动画(飞行时间根据当前点与目标点计算,则pitch及yaw不生效, 会自行计算);
+                                                                //false: 立刻跳转过去(有一个短暂飞行动画,并按照arm_distance, pitch, yaw设置镜头)
+            }
+            cloudRender.SuperAPI('SetCameraInfo', jsonData, (e) => {
+                let data = JSON.parse(e)
+                console.log(JSON.stringify(data, null, 2));
+            })
+        }
+
+        // 关闭场景
+        // top cloud rendering service
+        function StopRenderCloud() {
+            cloudRender.SuperAPI("StopRenderCloud");
+            setTimeout(() => window.location.reload(), 3e2);
+        }
+    </script>
+
+</body>
+
+</html>

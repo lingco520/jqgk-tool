@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.daqsoft.jqgktools.mapper.UserMapper">
+    <!--保存数据-->
+    <insert id="insertUserBatch" parameterType="java.util.List">
+        INSERT INTO `user`(`NAME`, `AGE`, `VCODE`, `ADD_TIME`) VALUES
+        <foreach collection="list" item="data" separator=",">
+            (#{data.name}, #{data.age}, #{data.vcode}, #{data.addTime})
+        </foreach>
+    </insert>
+    <!--保存数据-->
+    <insert id="insertUser" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `user`(`ID`, `NAME`, `AGE`, `VCODE`, `ADD_TIME`) VALUES
+            (NULL, #{name}, #{age}, #{vcode}, #{addTime})
+    </insert>
+    <!--保存数据-->
+    <insert id="insertUserTest" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `user_tt`(`ID`, `NAME`, `AGE`, `VCODE`, `ADD_TIME`) VALUES
+            (NULL, #{name}, #{age}, #{vcode}, #{addTime})
+    </insert>
+    <!--保存数据-->
+    <insert id="insertTicket" parameterType="java.util.List">
+        INSERT INTO `jq_ticket`(`MONEY`, `TYPE`, `TIME`, `TOTALPRICE`, `COUNT`, `VCODE`) VALUES
+        <foreach collection="list" item="data" separator=",">
+            (#{data.money}, #{data.type}, #{data.time}, #{data.totalprice}, #{data.count}, #{data.vcode})
+        </foreach>
+    </insert>
+    <!--更新数据-->
+    <update id="update" parameterType="java.util.Map">
+        update `user`
+        <set>
+            <if test="name != null">
+                NAME = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="age != null">
+                AGE = #{age},
+            </if>
+            <if test="vcode != null">
+                VCODE = #{vcode,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where ID = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateUser" parameterType="java.util.Map">
+        update `user`
+        <set>
+            <if test="name != null">
+                NAME = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="age != null">
+                AGE = #{age},
+            </if>
+            <if test="vcode != null">
+                VCODE = #{vcode,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where ID = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateTicket" parameterType="java.util.Map">
+        update `ticket`
+        <set>
+            <if test="type != null">
+                TYPE = #{type,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where ID = #{id,jdbcType=BIGINT}
+    </update>
+    <!--删除数据-->
+    <delete id="deleteUser">
+        <![CDATA[
+        delete from user where ADD_TIME <= #{time}
+        ]]>
+    </delete>
+    <!--模拟删除公有云数据-->
+    <delete id="deletePwData">
+        <![CDATA[
+        DELETE FROM s_sell_ticket2202 WHERE sst_selldate <= #{time}
+        ]]>
+    </delete>
+    <!--查询数据-->
+    <select id="select" resultType="java.util.Map">
+        select ID AS id, NAME AS name, AGE AS age, VCODE AS vcode from user where ID = #{id}
+    </select>
+    <!--查询数据-->
+    <select id="selectByAge" resultType="java.lang.String">
+        select AGE AS age from user where ID = #{id}
+    </select>
+    <select id="selectUserList" resultType="java.util.Map">
+        SELECT NAME AS name, ID AS id FROM user ORDER BY ADD_TIME DESC LIMIT 1
+    </select>
+    <select id="selectTicketList" resultType="java.util.Map">
+        SELECT TYPE AS type, ID AS id FROM ticket ORDER BY TIME DESC LIMIT 1
+    </select>
+</mapper>

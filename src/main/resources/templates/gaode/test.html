@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <title>地图显示</title>
+    <style>
+        html,
+        body,
+        #container {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<div class="info">
+    <h4 id="text"></h4>
+    <p>当前级别：<span id="map-zoom">15</span></p>
+</div>
+<div class="input-card" style="width:16rem">
+    <h4>地图缩放相关事件</h4>
+    <div>
+        <div class="input-item">
+            <button id="zoomOn" class="btn" style="margin-right:1rem;">绑定事件</button>
+            <button id="zoomOff" class="btn">解绑事件</button>
+        </div>
+    </div>
+</div>
+<div id="tip"></div>
+<!-- 加载地图JSAPI脚本 -->
+<script src="https://webapi.amap.com/maps?v=1.4.15&key=f29b197411517e4fc9621d7991fecc61"></script>
+<script>
+    var map = new AMap.Map('container', {
+        resizeEnable: true, //是否监控地图容器尺寸变化
+        zoom:6, //初始化地图层级
+        // layers: [imageLayer],
+        center: [116.68993, 39.482428] //初始化地图中心点
+    });
+    AMap.plugin('AMap.ToolBar',function(){//异步加载插件
+        var toolbar = new AMap.ToolBar();
+        map.addControl(toolbar);
+    });
+    var imageLayer = new AMap.ImageLayer({
+        bounds: new AMap.Bounds([113.091049, 35.853161], [120.254135, 42.940088]),
+        url: 'https://file.geeker.com.cn/uploadfile/server/greatwall/坐标有字_1628062921655.png', // 图片 Url
+        zIndex:2,
+        zooms: [0, 20] // 设置可见级别，[最小级别，最大级别]
+    });
+
+    // 将图层添加至地图实例
+    map.add(imageLayer);
+
+    var logMapinfo = function (){
+        var zoom = map.getZoom(); //获取当前地图级别
+        document.querySelector("#map-zoom").innerText = zoom;
+    };
+    logMapinfo();
+
+    function mapZoom(){
+        logMapinfo();
+        document.querySelector("#text").innerText = '正在缩放';
+    }
+    function mapZoomend(){
+        document.querySelector("#text").innerText = '缩放结束';
+    }
+
+    // 事件绑定
+    function zoomOn(){
+        log.success("绑定事件!");
+        map.on('zoomstart', mapZoomstart);
+        map.on('zoomchange', mapZoom);
+        map.on('zoomend', mapZoomend);
+    }
+    // 解绑事件
+    function zoomOff(){
+        log.success("解除事件绑定!");
+        map.off('zoomstart', mapZoomstart);
+        map.off('zoomchange', mapZoom);
+        map.off('zoomend', mapZoomend);
+    }
+
+    // 给按钮绑定事件
+    document.getElementById("zoomOn").onclick = zoomOn;
+    document.getElementById("zoomOff").onclick = zoomOff;
+</script>
+</body>
+</html>

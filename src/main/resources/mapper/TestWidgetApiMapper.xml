@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.daqsoft.jqgktools.mapper.TestWidgetApiMapper">
+    <!--保存文件上传oss_key数据-->
+    <insert id="saveOssKey">
+        INSERT INTO `res_oss_key` (`NAME`, `VCODE`, `OSS_KEY`) VALUES (#{name}, #{vcode}, #{ossKey})
+
+    </insert>
+
+    <!--查询所有数据表-->
+    <select id="selectTables" resultType="java.util.Map">
+        SELECT TABLE_NAME as tableName, TABLE_COMMENT as tableComment FROM information_schema.`TABLES`
+        WHERE TABLE_SCHEMA = #{database} ORDER BY TABLE_NAME ASC
+    </select>
+    <!--查询所有数据表(排除基础数据6张表，因为数据量很大)-->
+    <select id="selectTablesNotBasic" resultType="java.util.Map">
+        SELECT TABLE_NAME as tableName, TABLE_COMMENT as tableComment FROM information_schema.`TABLES`
+        WHERE TABLE_SCHEMA = #{database}
+        <if test="notExportTables != null and notExportTables.length > 0">
+            AND TABLE_NAME NOT in
+            <foreach collection="notExportTables" item="tableName" open="(" close=")" separator="," index="index">
+                #{tableName}
+            </foreach>
+        </if>
+         ORDER BY TABLE_NAME ASC
+    </select>
+    <!--查询表中所有列信息-->
+    <select id="selectColumns" resultType="java.util.Map">
+        SELECT TABLE_NAME AS tableName, COLUMN_NAME as columnName, COLUMN_KEY as columnKey, IS_NULLABLE as isNullable,
+        COLUMN_TYPE as columnType, COLUMN_COMMENT as columnComment FROM information_schema.`COLUMNS`
+        WHERE TABLE_SCHEMA = #{database} AND TABLE_NAME = #{table} ORDER BY TABLE_NAME ASC
+    </select>
+    <!--查询数据表数据-->
+    <select id="selectTableData" resultType="java.util.Map">
+        SELECT * FROM ${tableName}
+        <where>
+            <if test="vcode != null and '' != vcode">
+                AND VCODE = #{vcode}
+            </if>
+        </where>
+        LIMIT #{start}, #{dataSize}
+    </select>
+    <!--查询文件上传oss_key-->
+    <select id="selectOssKey" resultType="java.util.Map">
+        SELECT NAME, VCODE, OSS_KEY FROM res_oss_key WHERE VCODE = #{vcode}
+    </select>
+</mapper>

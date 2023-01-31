@@ -1,0 +1,75 @@
+server:
+  port: 2021
+spring:
+  application:
+    name: jqgktool
+  mvc:
+    static-path-pattern: /static/**
+  profiles:
+    active: test
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      # 初始连接数
+      initialSize: 10
+      # 最小连接池数量
+      minIdle: 10
+      # 最大连接池数量
+      maxActive: 100
+      # 配置获取连接等待超时的时间
+      maxWait: 30000
+      # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      timeBetweenEvictionRunsMillis: 60000
+      # 配置一个连接在池中最小生存的时间，单位是毫秒
+      minEvictableIdleTimeMillis: 30000
+      # 配置一个连接在池中最大生存的时间，单位是毫秒
+      maxEvictableIdleTimeMillis: 60000
+      # 配置检测连接是否有效
+      validationQuery: SELECT 1 FROM DUAL
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      # 要求程序从池中get到连接后, N 秒后必须close,否则druid 会强制回收该	false,当发现程序有未
+      # 	连接,不管该连接中是活动还是空闲, 以防止进程不会进行close而霸占连接。
+      removeAbandoned: true
+      # 当程序从池中get到连接开始算起，超过此	应大于业务运行最长时间
+      # 	值后，druid将强制回收该连接，单位秒
+      removeAbandonedTimeout: 600
+      # 当druid强制回收连接后，是否将stack trace 记录到日志中
+      logAbandoned: true
+      webStatFilter:
+        enabled: true
+      statViewServlet:
+        enabled: true
+        # 设置白名单，不填则允许所有访问
+        allow:
+        url-pattern: /druid/*
+        # 控制台管理用户名和密码
+        login-username:
+        login-password:
+      filter:
+        stat:
+          enabled: true
+          # 慢SQL记录
+          log-slow-sql: true
+          slow-sql-millis: 500
+          merge-sql: true
+        wall:
+          config:
+            multi-statement-allow: true
+  thymeleaf:
+    mode: HTML5
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: utf-8
+    cache: false
+  cloud:
+    sentinel:
+      transport:
+        dashboard: 127.0.0.1:8080
+      eager: true
+mybatis:
+  configuration:
+    call-setters-on-nulls: true
+  mapper-locations: classpath*:mapper/**/*.xml
+  logImpl: org.apache.ibatis.logging.stdout.StdOutImpl
